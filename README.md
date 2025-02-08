@@ -25,7 +25,7 @@ Go to node_modules/whatsapp-web.js
 
 Then open package.json
 
-Replace `"fluent-ffmpeg": "2.1.3", ` with `"fluent-ffmpeg": "2.1.3",`
+Replace `"fluent-ffmpeg": "2.1.2", ` with `"fluent-ffmpeg": "2.1.3",`
 
 And finally, npm install.
 
