@@ -2,3 +2,4 @@
 *node_modules/*
 .ww*
 *package-lock.json
+dist/

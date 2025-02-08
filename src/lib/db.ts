@@ -1,0 +1,25 @@
+// const { createClient } = require('@supabase/supabase-js');
+import { createClient } from "@supabase/supabase-js"
+const supabaseURL: string = process.env.SUPABASE_URL || ''
+const adminKey = process.env.SUPABASE_ADMIN_KEY || ''
+
+const supabase = createClient(supabaseURL, adminKey, {
+    auth: {
+        autoRefreshToken: false,
+        persistSession: false
+    }
+})
+
+/**
+ * Saves a chat to the database.
+ *
+ * @param {string} businessId - The ID of the business associated with the chat.
+ * @param {string} customerPhone - The phone number of the customer associated with the chat.
+ */
+export async function saveChatToDB(businessId: number, customerPhone: string) {
+    console.log("businessId", businessId)
+    console.log("customerPhone: ", customerPhone)
+    let { data, error } = await supabase.from("chats").insert([{ business_id: businessId, customer_phone: customerPhone }])
+    if (error) console.error(error)
+    if (data) console.log(data)
+}

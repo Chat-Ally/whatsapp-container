@@ -1,14 +1,15 @@
-require('dotenv').config();
-const express = require('express')
-const app = express();
-const qrcode = require('qrcode-terminal');
-const dify = require('../dify-js/index')
-const { Client, LocalAuth } = require('whatsapp-web.js');
-const makeConversationId = require('./makeId');
-const { saveChatToDB } = require('./db')
+import dotenv from "dotenv"
+dotenv.config()
+import express, { type Express } from "express";
+const app: Express = express();
+import qrcode from "qrcode-terminal"
+import dify from "./lib/dify.js";
+import { Client, LocalAuth } from "whatsapp-web.js";
+import { makeConversationId } from "./lib/makeId.js";
+import { saveChatToDB } from "./lib/db.js"
 
-const difyApiKey = process.env.DIFY_API_KEY
-const difyURL = process.env.DIFY_URL
+const difyApiKey = process.env['DIFY_API_KEY'] || ''
+const difyURL = process.env['DIFY_URL'] || ''
 
 let businessProfile = {
     id: 1,
@@ -42,7 +43,7 @@ client.on('message', async (msg) => {
     let customerPhone = msg.to
     let conversationId = makeConversationId(businessPhone, customerPhone)
     let conversation = await findConversation(conversationId)
-    if(!conversation) saveChatToDB(businessProfile.id, customerPhone)
+    if (!conversation) saveChatToDB(businessProfile.id, customerPhone)
     let answer = await sendMessage(msg.body, conversationId)
     msg.reply(answer)
 })
@@ -52,8 +53,10 @@ client.initialize();
 
 app.get('/', (req, res) => {
     res.send('Hello World!');
+    console.log("console")
 });
 
+// get data
 app.get('/a', (req, res) => {
     console.log("hola")
     res.send({
@@ -62,6 +65,7 @@ app.get('/a', (req, res) => {
 })
 
 const port = 9590;
+
 app.listen(port, '0.0.0.0', () => {
     console.log(`Server listening on port ${port}`);
 });

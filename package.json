@@ -2,7 +2,11 @@
   "name": "wa-bot-llm",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
+    "build": "bun build src/index.ts --outdir dist --target node",
+    "dev": "bun run src/index.ts",
+    "start": "node --env-file=.env dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -14,5 +18,14 @@
     "express": "^4.21.2",
     "qrcode-terminal": "^0.12.0",
     "whatsapp-web.js": "^1.26.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.1",
+    "@types/qrcode-terminal": "^0.12.2",
+    "typescript": "^5.7.3"
+  },
+  "patchedDependencies": {
+    "fluent-ffmpeg@2.1.2": "patches/fluent-ffmpeg@2.1.2.patch"
   }
 }

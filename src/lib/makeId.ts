@@ -1,17 +1,15 @@
-function makeConversationId(messageFrom, messageTo){
+export function makeConversationId(messageFrom: string, messageTo: string) {
     return getSimpleNumber(removePrefix(messageFrom)) + "@" + getSimpleNumber(removePrefix(messageTo))
 }
 
-function getSimpleNumber(phone){
+function getSimpleNumber(phone: string) {
     return removeSufix(phone)
 }
 
-function removeSufix(phone){
+function removeSufix(phone: string) {
     return phone.replace("@c.us", "")
 }
 
-function removePrefix(phone){
+function removePrefix(phone: string) {
     return phone.slice(3)
 }
-
-module.exports = makeConversationId
