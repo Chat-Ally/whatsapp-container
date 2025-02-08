@@ -1,40 +1,39 @@
-export default function dify(url: string, apiKey: string) {
-    const headers = {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-    };
+import type { DifyChatCompletion } from "../dto/dify-data-completion";
+import type { Conversations } from "../dto/find-conversation-response";
 
-    async function getConversationHistoryMessages(userId: string) {
-        let conversationId = await findConversation(userId)
-        if (conversationId.length > 0) {
-            let conversation = await fetch(
-                url + '/messages?' + new URLSearchParams({ user: userId, conversation_id: conversationId }), {
-                method: "GET",
-                headers
-            })
+export default class Dify {
+    private url: string;
+    private apiKey: string;
 
-            conversation = await conversation.json()
-            return conversation
-        }
+    constructor(url: string, apiKey: string) {
+        this.url = url;
+        this.apiKey = apiKey;
+    }
+
+    private headers(): { [key: string]: string } {
+        return {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+        };
     }
 
     /**
      * Returns users's conversation id.
      *
      * @async
-     * @param {string} user - User object containing user information (e.g., id).
-     * @returns {Promise<string>} A promise that resolves with the user's conversation id.
+     * @param user - User object containing user information (e.g., id).
+     * @returns A promise that resolves with the user's conversation id.
      */
-    async function findConversation(user: string) {
-        let conversations = await fetch(url + '/conversations?' + new URLSearchParams({ user: user, limit: 1 }).toString(), {
-            method: "GET",
-            headers,
-        })
-        conversations = await conversations.json()
+    async findConversation(user: string): Promise<string> {
+        const req = await fetch(`${this.url}/conversations?${new URLSearchParams({ user, limit: String(1) }).toString()}`, {
+            method: 'GET',
+            headers: this.headers()
+        });
+        let conversations: Conversations = await req.json() as Conversations
         if (conversations.data.length > 0) {
-            return conversations.data[0].id
+            return conversations.data[0].id;
         } else {
-            return ""
+            return '';
         }
     }
 
@@ -42,41 +41,63 @@ export default function dify(url: string, apiKey: string) {
      * Sends a message to a user and retrieves the response.
      *
      * @async
-     * @param {string} message - The message to be sent.
-     * @param {string} conversationId - A join of user phone + @ + business phone, used to identify conversation in dify.
-     * @returns {Promise<string>} A promise that resolves with the bot's response to the message.
+     * @param message - The message to be sent.
+     * @param conversationId - A join of user phone + @ + business phone, used to identify conversation in dify.
+     * @returns A promise that resolves with the bot's response to the message.
      */
+    async sendMessage(message: string, conversationId: string): Promise<string> {
+        const data = {
+            'inputs': {},
+            'query': message,
+            'response_mode': 'blocking',
+            'conversation_id': await this.findConversation(conversationId), // previous conversations mus be recovered
+            'user': conversationId,
+        };
 
-    async function sendMessage(message: string, conversationId: string) {
-        let data = {
-            "inputs": {},
-            "query": message,
-            "response_mode": "blocking",
-            "conversation_id": await findConversation(conversationId), // previous conversations mus be recovered
-            "user": conversationId
-        }
-        let answer = await fetch(url + '/chat-messages', {
+        let answer = await fetch(`${this.url}/chat-messages`, {
             method: 'POST',
-            headers,
+            headers: this.headers(),
             body: JSON.stringify(data)
-        })
+        });
 
-        answer = await answer.json()
-        return answer.answer
+        let chatCompletion = await answer.json() as DifyChatCompletion
+        console.log(chatCompletion)
+        return chatCompletion.answer;
     }
 
-    async function deleteConversation(conversationId: string, userId: string) {
-        let data = {
-            "user": userId
+    /**
+     * Deletes a conversation.
+     *
+     * @async
+     * @param conversationId - The ID of the conversation to be deleted.
+     * @param userId - The user's ID who initiated the conversation.
+     * @returns A promise that resolves with the response from the server.
+     */
+    async deleteConversation(conversationId: string, userId: string): Promise<any> {
+        const data = { 'user': userId };
+
+        const answer = await fetch(`${this.url}/conversations/${conversationId}`, {
+            method: "DELETE",
+            headers: this.headers(),
+            body: JSON.stringify(data)
+        });
+        return answer;
+    }
+
+    /**
+     * Returns the conversation history messages for a user.
+     *
+     * @async
+     * @param userId - The ID of the user who initiated the conversation.
+     * @returns A promise that resolves with an array of conversation history messages.
+     */
+    async getConversationHistoryMessages(userId: string): Promise<any> {
+        const conversationId = await this.findConversation(userId);
+        if (conversationId.length > 0) {
+            const conversation = await fetch(`${this.url}/messages?user=${userId}&conversation_id=${conversationId}`, {
+                headers: this.headers()
+            });
+            return conversation;
         }
-        let answer = await fetch(url + '/conversations/' + conversationId, {
-            method: 'DELETE',
-            headers,
-            body: JSON.stringify(data)
-        })
-
-        return answer.json()
     }
-
-    return { findConversation, sendMessage, deleteConversation, getConversationHistoryMessages }
 }

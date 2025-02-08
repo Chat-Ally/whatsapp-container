@@ -1,5 +1,5 @@
 import qrcode from "qrcode-terminal"
-import dify from "./lib/dify.js";
+import Dify from "./lib/dify.js"; "./lib/dify.js";
 import { Client, LocalAuth } from "whatsapp-web.js";
 import { makeConversationId } from "./lib/makeId.js";
 import { saveChatToDB } from "./lib/db.js"
@@ -14,7 +14,7 @@ let businessProfile = {
     email: "chatally@gmail.com"
 }
 
-let { sendMessage, deleteConversation, findConversation } = dify(difyURL, difyApiKey)
+let dify = new Dify(difyURL, difyApiKey)
 
 // Create a new client instance
 const whatsapp = new Client({
@@ -38,9 +38,10 @@ whatsapp.on('message', async (msg) => {
     let businessPhone = msg.from
     let customerPhone = msg.to
     let conversationId = makeConversationId(businessPhone, customerPhone)
-    let conversation = await findConversation(conversationId)
+    let conversation = await dify.findConversation(conversationId)
+    console.log(conversation)
     if (!conversation) saveChatToDB(businessProfile.id, customerPhone)
-    let answer = await sendMessage(msg.body, conversationId)
+    let answer = await dify.sendMessage(msg.body, conversationId)
     msg.reply(answer)
 })
 
