@@ -1,4 +1,5 @@
 import express, { type Express } from "express";
+import { getProducts } from "./lib/db";
 
 const app: Express = express();
 
@@ -7,11 +8,14 @@ app.get('/', (req, res) => {
     console.log("console")
 });
 
-// get data
-app.get('/a', (req, res) => {
-    console.log("hola")
+app.get('/products/:conversation', async (req, res) => {
+    let conversationId = req.params.conversation
+    let businesPhone = conversationId.split("@")[1]
+    let businessPhone = Number(businesPhone)
+    let products = await getProducts(businessPhone)
+    console.log(products)
     res.send({
-        "food": ["frijol con puerco", "pechuga empanizada"]
+        "products": products
     })
 })
 
