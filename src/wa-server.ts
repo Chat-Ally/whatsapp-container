@@ -39,7 +39,6 @@ whatsapp.on('message', async (msg) => {
     let customerPhone = msg.to
     let conversationId = makeConversationId(businessPhone, customerPhone)
     let conversation = await dify.findConversation(conversationId)
-    console.log(conversation)
     if (!conversation) saveChatToDB(businessProfile.id, customerPhone)
     let answer = await dify.sendMessage(msg.body, conversationId)
     msg.reply(answer)

@@ -61,7 +61,6 @@ export default class Dify {
         });
 
         let chatCompletion = await answer.json() as DifyChatCompletion
-        console.log(chatCompletion)
         return chatCompletion.answer;
     }
 

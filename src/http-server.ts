@@ -1,5 +1,5 @@
 import express, { type Express } from "express";
-import { getProducts } from "./lib/db";
+import { getProduct, getProducts } from "./lib/db";
 
 const app: Express = express();
 
@@ -8,14 +8,26 @@ app.get('/', (req, res) => {
     console.log("console")
 });
 
-app.get('/products/:conversation', async (req, res) => {
-    let conversationId = req.params.conversation
-    let businesPhone = conversationId.split("@")[1]
-    let businessPhone = Number(businesPhone)
+app.get('/products/:business_id', async (req, res) => {
+    let business_id = req.params.business_id
+    console.log('/products/' + business_id)
+    let businessPhone = Number(business_id)
     let products = await getProducts(businessPhone)
-    console.log(products)
     res.send({
         "products": products
+    })
+})
+
+// Here we need to find a product based on the name. We query prouduct names, meaning we cannot have repeated names.
+// We can filter via categories. We also need to pull products from the bussiness
+
+app.get('/product/:business_phone/:name', async (req, res) => {
+    let { business_phone, name } = req.params
+    console.log('/product/' + business_phone + '/' + name)
+
+    let product = await getProduct(Number(business_phone), name)
+    res.send({
+        product: product
     })
 })
 
