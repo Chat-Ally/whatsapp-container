@@ -3,6 +3,7 @@ import Dify from "./lib/dify.js"; "./lib/dify.js";
 import { Client, LocalAuth } from "whatsapp-web.js";
 import { makeConversationId } from "./lib/makeId.js";
 import { saveChatToDB } from "./lib/db.js"
+import removeAccents from "./lib/remove-accents.js";
 
 const difyApiKey = process.env['DIFY_API_KEY'] || ''
 const difyURL = process.env['DIFY_URL'] || ''
@@ -35,12 +36,13 @@ whatsapp.on('qr', (qr) => {
 });
 
 whatsapp.on('message', async (msg) => {
-    let businessPhone = msg.from
-    let customerPhone = msg.to
-    let conversationId = makeConversationId(businessPhone, customerPhone)
+    let businessPhone = msg.to
+    let customerPhone = msg.from
+    let conversationId = makeConversationId(customerPhone, businessPhone)
+    console.log("conversationId", conversationId)
     let conversation = await dify.findConversation(conversationId)
     if (!conversation) saveChatToDB(businessProfile.id, customerPhone)
-    let answer = await dify.sendMessage(msg.body, conversationId)
+    let answer = await dify.sendMessage(removeAccents(msg.body), conversationId)
     msg.reply(answer)
 })
 
