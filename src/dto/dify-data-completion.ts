@@ -38,3 +38,8 @@ export interface RetrieverResource {
     score: number;
     content: string;
 }
+
+export interface SendMessageResponse {
+    answer: string,
+    conversation_id: string
+}
