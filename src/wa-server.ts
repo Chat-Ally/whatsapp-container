@@ -1,7 +1,6 @@
 import qrcode from "qrcode-terminal"
 import Dify from "./lib/dify.js"; "./lib/dify.js";
 import { Client, LocalAuth } from "whatsapp-web.js";
-import { makeConversationId } from "./lib/makeId.js";
 import { saveChatToDB } from "./lib/db.js"
 import removeAccents from "./lib/remove-accents.js";
 
@@ -38,12 +37,13 @@ whatsapp.on('qr', (qr) => {
 whatsapp.on('message', async (msg) => {
     let businessPhone = msg.to
     let customerPhone = msg.from
-    let conversationId = makeConversationId(customerPhone, businessPhone)
-    console.log("conversationId", conversationId)
-    let conversation = await dify.findConversation(conversationId)
-    if (!conversation) saveChatToDB(businessProfile.id, customerPhone)
-    let answer = await dify.sendMessage(removeAccents(msg.body), conversationId)
-    msg.reply(answer)
+
+    let difyConversation = await dify.findConversation(customerPhone) // find conversation in dify database 
+
+    if (!difyConversation) saveChatToDB(businessProfile.id, customerPhone)
+
+    let difyAnswer = await dify.sendMessage(removeAccents(msg.body), customerPhone)
+    msg.reply(difyAnswer.answer)
 })
 
 export default whatsapp

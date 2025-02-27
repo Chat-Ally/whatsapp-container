@@ -1,4 +1,4 @@
-import type { DifyChatCompletion } from "../dto/dify-data-completion";
+import type { DifyChatCompletion, SendMessageResponse } from "../dto/dify-data-completion";
 import type { Conversations } from "../dto/find-conversation-response";
 
 export default class Dify {
@@ -45,7 +45,7 @@ export default class Dify {
      * @param conversationId - A join of user phone + @ + business phone, used to identify conversation in dify.
      * @returns A promise that resolves with the bot's response to the message.
      */
-    async sendMessage(message: string, conversationId: string): Promise<string> {
+    async sendMessage(message: string, conversationId: string): Promise<SendMessageResponse> {
         const data = {
             'inputs': {},
             'query': message,
@@ -61,7 +61,10 @@ export default class Dify {
         });
 
         let chatCompletion = await answer.json() as DifyChatCompletion
-        return chatCompletion.answer;
+        return {
+            answer: chatCompletion.answer,
+            conversation_id: chatCompletion.conversation_id
+        }
     }
 
     /**
