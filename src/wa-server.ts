@@ -1,7 +1,7 @@
 import qrcode from "qrcode-terminal"
 import Dify from "./lib/dify.js"; "./lib/dify.js";
 import { Client, LocalAuth } from "whatsapp-web.js";
-import { saveChatToDB } from "./lib/db.js"
+import { getChatByClientAndBusinessPhone, saveChatToDB } from "./lib/db.js"
 import removeAccents from "./lib/remove-accents.js";
 
 const difyApiKey = process.env['DIFY_API_KEY'] || ''
@@ -10,7 +10,7 @@ const difyURL = process.env['DIFY_URL'] || ''
 let businessProfile = {
     id: 1,
     name: "Chat Ally",
-    phone: "9995992592",
+    phone: "5219995992592@c.us",
     email: "chatally@gmail.com"
 }
 
@@ -34,16 +34,35 @@ whatsapp.on('qr', (qr) => {
     qrcode.generate(qr, { small: true });
 });
 
+// Here are a ton of ramifications.
+// Things to consider:
+//  1. A single user can have conversations with multiple business.
+//  2. Dify stores messages, and the database stores our app's data
+//  3. We have to sync Dify conversatinos with database chats
 whatsapp.on('message', async (msg) => {
     let businessPhone = msg.to
     let customerPhone = msg.from
 
-    let difyConversation = await dify.findConversation(customerPhone) // find conversation in dify database 
+    // 1. Find if user has any previous conversation in dify
+    let customerHasConversations = await dify.userHasConversations(customerPhone)
 
-    if (!difyConversation) saveChatToDB(businessProfile.id, customerPhone)
+    // 2. If there are any conversations of this user in dify, check if there is a 
+    //    chat/conversation between current user and current business in database
+    let previousConversation;
+    if (customerHasConversations) previousConversation = await getChatByClientAndBusinessPhone(customerPhone, businessPhone)
 
-    let difyAnswer = await dify.sendMessage(removeAccents(msg.body), customerPhone)
-    msg.reply(difyAnswer.answer)
+    // 3. Send message to to previous conversation (or create a new one)
+    let text = removeAccents(msg.body)
+    let difyResponse = await dify.sendMessage(
+        text,
+        customerPhone,
+        previousConversation ? previousConversation.id : undefined // if previousConversation exists, it's pass it's id, if not, dify creates a new one and returns its id
+    )
+
+    // 4. Save created conversatinos, if it didnt exist
+    if (!customerHasConversations) saveChatToDB(businessProfile.id, customerPhone, difyResponse.conversation_id)
+
+    msg.reply(difyResponse.answer)
 })
 
 export default whatsapp
