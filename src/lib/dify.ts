@@ -1,3 +1,4 @@
+import type { UUID } from "crypto";
 import type { DifyChatCompletion, SendMessageResponse } from "../dto/dify-data-completion";
 import type { Conversations } from "../dto/find-conversation-response";
 
@@ -37,21 +38,31 @@ export default class Dify {
         }
     }
 
+    async userHasConversations(user: string): Promise<boolean> {
+        const req = await fetch(`${this.url}/conversations?${new URLSearchParams({ user, limit: String(1) }).toString()}`, {
+            method: 'GET',
+            headers: this.headers()
+        });
+        let conversations: Conversations = await req.json() as Conversations
+        return conversations.data.length > 0
+    }
+
     /**
      * Sends a message to a user and retrieves the response.
      *
      * @async
      * @param message - The message to be sent.
-     * @param conversationId - A join of user phone + @ + business phone, used to identify conversation in dify.
+     * @param customerPhone - The phone of the customer, used to idenfity in dify.
+     * @param conversationId - A UUID identifying one of the customer's conversations.
      * @returns A promise that resolves with the bot's response to the message.
      */
-    async sendMessage(message: string, conversationId: string): Promise<SendMessageResponse> {
+    async sendMessage(message: string, customerPhone: string, conversationId?: UUID): Promise<SendMessageResponse> {
         const data = {
             'inputs': {},
             'query': message,
             'response_mode': 'blocking',
-            'conversation_id': await this.findConversation(conversationId), // previous conversations mus be recovered
-            'user': conversationId,
+            'conversation_id': conversationId ?? '',
+            'user': customerPhone,
         };
 
         let answer = await fetch(`${this.url}/chat-messages`, {
