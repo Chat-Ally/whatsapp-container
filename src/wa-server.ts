@@ -3,6 +3,7 @@ import Dify from "./lib/dify.js"; "./lib/dify.js";
 import { Client, LocalAuth } from "whatsapp-web.js";
 import { getChatByClientAndBusinessPhone, saveChatToDB } from "./lib/db.js"
 import removeAccents from "./lib/remove-accents.js";
+import type { CustomerBusinessNumbers } from "./dto/dify-data-completion.js";
 
 const difyApiKey = process.env['DIFY_API_KEY'] || ''
 const difyURL = process.env['DIFY_URL'] || ''
@@ -53,10 +54,15 @@ whatsapp.on('message', async (msg) => {
 
     // 3. Send message to to previous conversation (or create a new one)
     let text = removeAccents(msg.body)
+    let phones: CustomerBusinessNumbers = {
+        businessPhoneNumber: businessPhone,
+        customerPhoneNumber: customerPhone
+    }
     let difyResponse = await dify.sendMessage(
         text,
         customerPhone,
-        previousConversation ? previousConversation.id : undefined // if previousConversation exists, it's pass it's id, if not, dify creates a new one and returns its id
+        previousConversation ? previousConversation.id : undefined, // if previousConversation exists, it's pass it's id, if not, dify creates a new one and returns its id
+        phones
     )
 
     // 4. Save created conversatinos, if it didnt exist

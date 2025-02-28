@@ -1,3 +1,5 @@
+import type { UUID } from "crypto";
+
 export interface DifyChatCompletion {
     event: "message";
     message_id: string;
@@ -42,4 +44,9 @@ export interface RetrieverResource {
 export interface SendMessageResponse {
     answer: string,
     conversation_id: string
+}
+
+export interface CustomerBusinessNumbers {
+    customerPhoneNumber: string,
+    businessPhoneNumber: string
 }

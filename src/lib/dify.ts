@@ -1,5 +1,5 @@
 import type { UUID } from "crypto";
-import type { DifyChatCompletion, SendMessageResponse } from "../dto/dify-data-completion";
+import type { CustomerBusinessNumbers, DifyChatCompletion, SendMessageResponse } from "../dto/dify-data-completion";
 import type { Conversations } from "../dto/find-conversation-response";
 
 export default class Dify {
@@ -56,9 +56,14 @@ export default class Dify {
      * @param conversationId - A UUID identifying one of the customer's conversations.
      * @returns A promise that resolves with the bot's response to the message.
      */
-    async sendMessage(message: string, customerPhone: string, conversationId?: UUID): Promise<SendMessageResponse> {
+    async sendMessage(
+        message: string,
+        customerPhone: string,
+        conversationId?: UUID,
+        inputs?: CustomerBusinessNumbers // Dify has an optional input field, to send along the message, here we can add variables.
+    ): Promise<SendMessageResponse> {
         const data = {
-            'inputs': {},
+            'inputs': inputs,
             'query': message,
             'response_mode': 'blocking',
             'conversation_id': conversationId ?? '',
