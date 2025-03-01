@@ -9,11 +9,9 @@ app.get('/', (req: Request, res: Response) => {
     res.send('Hello World!');
 });
 
-app.get('/products/:business_id', async (req: Request, res: Response) => {
-    let business_id = req.params['business_id']
-    console.log('/products/' + business_id)
-    let businessPhone = Number(business_id)
-    let products = await getProducts(businessPhone)
+app.get('/products/:business_phone', async (req: Request, res: Response) => {
+    let business_phone = req.params['business_phone']
+    let products = await getProducts(business_phone)
     res.send({
         "products": products
     })

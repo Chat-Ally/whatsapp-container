@@ -46,8 +46,12 @@ export async function saveChatToDB(businessId: number, customerPhone: string, ch
  * @param {string} customerPhone - A phone number from a customer.
 */
 export async function getOrCreatePhoneNumber(customerPhone: string): Promise<PhoneNumber | undefined> {
-    let { data: phone, error: phoneError } = await supabase.from("phones").select("*").eq("number", customerPhone).single()
-    if (phoneError) console.error('Error while running getOrCreatePhoneNumber', phoneError)
+    let { data: phone, error: phoneError } = await supabase
+        .from("phones")
+        .select("*")
+        .eq("number", customerPhone)
+        .single()
+    if (phoneError) console.error('getOrCreatePhoneNumber', phoneError)
     if (phone) {
         // console.log("getOrCreatePhoneNumber", phone)
         return phone
@@ -66,8 +70,8 @@ export async function getOrCreatePhoneNumber(customerPhone: string): Promise<Pho
  * @param {number} businessPhone - The phone number of the business associated with the products.
  * @returns {(Promise<Product[] | null>)} A promise that resolves to an array of Product objects or null if an error occurs.
  */
-export async function getProducts(businessPhone: number) {
-    let businessId = await getBusinessIdByPhoneNumber(String(businessPhone))
+export async function getProducts(businessPhone: string) {
+    let businessId = await getBusinessIdByPhoneNumber(businessPhone)
     let { data, error } = await supabase.from("products").select("*").eq("business_id", businessId).limit(5)
     if (error) console.error(error)
     return data
@@ -95,12 +99,18 @@ export async function getProduct(businessPhone: number, productName: string) {
  * @returns {Promise<number>} A promise that resolves to the business ID if found, or 0 if not found.
  */
 export async function getBusinessIdByPhoneNumber(businessPhone: string): Promise<number> { // i probably break something
-    let { data, error } = await supabase.from("business").select("id").eq("phone", businessPhone)
-    if (error) console.error(error)
+    console.log('businessPhone', businessPhone)
+    let { data, error } = await supabase
+        .from("business")
+        .select("id")
+        .eq("phone", businessPhone)
+        .single()
+    if (error) console.error('getBusinessIdByPhoneNumber', error)
     if (!data || data == null) return 0
+
     console.log('getBusinessIdByPhone', data)
 
-    return data && data[0].id as number
+    return data && data.id as number
 }
 
 export async function getChatByClientAndBusinessPhone(customerPhone: string, businessPhone: string): Promise<enwhatsChat> {
