@@ -190,7 +190,7 @@ export async function createOrder(
     if (data) {
         console.log("createOrder", data)
         console.log("createOrder products", products)
-        createProductOrder(products, data.id)
+        createProductOrder(products, data[0].id)
     }
     return data
 }
