@@ -1,5 +1,5 @@
 import express, { type Express, type Request, type Response } from "express";
-import { createOrder, getBusinessIdByPhoneNumber, getChatId, getChats, getProduct, getProducts } from "./lib/db";
+import { createOrder, getBusinessIdByPhoneNumber, getChatId, getChats, getPhoneIdByNumber, getProduct, getProducts } from "./lib/db";
 import Dify from "./lib/dify";
 
 const app: Express = express();
@@ -24,7 +24,7 @@ app.get('/product/:business_phone/:name', async (req, res) => {
     let { business_phone, name } = req.params
     console.log('/product/' + business_phone + '/' + name)
 
-    let product = await getProduct(Number(business_phone), name)
+    let product = await getProduct(business_phone, name)
     if (product == null) {
         res.status(400).send({
             product: null
@@ -36,19 +36,16 @@ app.get('/product/:business_phone/:name', async (req, res) => {
 app.get('/chats', async (req: Request, res: Response) => {
     console.log('/orders')
     const chats = await getChats()
-
     res.send(chats)
 })
 
 app.post('/orders', async (req: Request, res: Response) => {
-    // in the post body we get the products
-
+    console.log('POST /orders')
     const { customer_phone, business_phone, product_list } = req.body
-    console.log('/orders/')
-    console.log("product list", product_list, typeof product_list)
+
     let businessId = await getBusinessIdByPhoneNumber(business_phone)
-    let chatId = await getChatId(businessId, customer_phone)
-    console.log("chatId", chatId)
+    let customerPhoneId = await getPhoneIdByNumber(customer_phone)
+    let chatId = await getChatId(businessId, customerPhoneId)
     let order = await createOrder(chatId, 100, 80, JSON.parse(product_list))
 
     res.send({
@@ -56,7 +53,6 @@ app.post('/orders', async (req: Request, res: Response) => {
         "customer_phone": customer_phone,
         "business_phone": business_phone,
         "order": order
-
     })
 })
 

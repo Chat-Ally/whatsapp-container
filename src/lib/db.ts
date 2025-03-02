@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js"
 import type PhoneNumber from "../dto/phone-number"
-import type { enwhatsChat } from "../dto/dify-data-completion"
+import type { UUID } from "crypto"
 const supabaseURL: string = process.env["SUPABASE_URL"] || ''
 const adminKey = process.env["SUPABASE_ADMIN_KEY"] || ''
 
@@ -33,7 +33,7 @@ export async function saveChatToDB(businessId: number, customerPhone: string, ch
                 business_id: businessId,
                 customer_phone_id: phoneNumber.id
             }])
-        if (error) console.error(error)
+        if (error) console.error('saveChatToDB', error)
         if (data) {
             console.log(data)
         }
@@ -56,8 +56,11 @@ export async function getOrCreatePhoneNumber(customerPhone: string): Promise<Pho
         // console.log("getOrCreatePhoneNumber", phone)
         return phone
     } else {
-        let { data, error } = await supabase.from("phones").upsert([{ number: customerPhone }]).select()
-        if (error) console.error(error)
+        let { data, error } = await supabase
+            .from("phones")
+            .upsert([{ number: customerPhone }])
+            .select()
+        if (error) console.error('getOrCreatePhoneNumber', error)
         if (data) {
             return data[0]
         }
@@ -72,8 +75,12 @@ export async function getOrCreatePhoneNumber(customerPhone: string): Promise<Pho
  */
 export async function getProducts(businessPhone: string) {
     let businessId = await getBusinessIdByPhoneNumber(businessPhone)
-    let { data, error } = await supabase.from("products").select("*").eq("business_id", businessId).limit(5)
-    if (error) console.error(error)
+    let { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("business_id", businessId)
+        .limit(5)
+    if (error) console.error('getProducts', error)
     return data
 }
 
@@ -84,10 +91,15 @@ export async function getProducts(businessPhone: string) {
  * @param {string} productName - The name of the product to retrieve.
  * @returns {(Promise<Product | null>)} A promise that resolves to a Product object or null if an error occurs.
  */
-export async function getProduct(businessPhone: number, productName: string) {
+export async function getProduct(businessPhone: string, productName: string) {
     let businessId = await getBusinessIdByPhoneNumber(String(businessPhone))
-    let { data, error } = await supabase.from("products").select("*").eq("business_id", businessId).ilike("name", `${productName}%`).single()
-    if (error) console.error(error)
+    let { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("business_id", businessId)
+        .ilike("name", `${productName}%`)
+        .single()
+    if (error) console.error('getProduct', error)
     console.log(data)
     return data
 }
@@ -99,7 +111,6 @@ export async function getProduct(businessPhone: number, productName: string) {
  * @returns {Promise<number>} A promise that resolves to the business ID if found, or 0 if not found.
  */
 export async function getBusinessIdByPhoneNumber(businessPhone: string): Promise<number> { // i probably break something
-    console.log('businessPhone', businessPhone)
     let { data, error } = await supabase
         .from("business")
         .select("id")
@@ -113,7 +124,10 @@ export async function getBusinessIdByPhoneNumber(businessPhone: string): Promise
     return data && data.id as number
 }
 
-export async function getChatByClientAndBusinessPhone(customerPhone: string, businessPhone: string): Promise<enwhatsChat> {
+export async function getChatByClientAndBusinessPhone(
+    customerPhone: string,
+    businessPhone: string
+): Promise<any> {
     let customerPhoneId = await getPhoneIdByNumber(customerPhone)
     let businesId = await getBusinessIdByPhoneNumber(businessPhone)
 
@@ -124,14 +138,18 @@ export async function getChatByClientAndBusinessPhone(customerPhone: string, bus
         .eq("business_id", String(businesId),)
         .single()
 
-    if (chatsError) console.error('getChatByClientAndBusinessPhone error: ', chatsError)
+    if (chatsError) console.error('getChatByClientAndBusinessPhone', chatsError)
 
     return chats
 }
 
 export async function getPhoneIdByNumber(phoneNumber: string): Promise<number | null> {
-    let { data, error } = await supabase.from("phones").select("*").eq("number", phoneNumber).single()
-    if (error) console.error(error)
+    let { data, error } = await supabase
+        .from("phones")
+        .select("*")
+        .eq("number", phoneNumber)
+        .single()
+    if (error) console.error('getPhoneIdByNumber', error)
 
     return data.id
 }
@@ -151,8 +169,14 @@ export async function getPhoneIdByNumber(phoneNumber: string): Promise<number | 
  * @returns {Promise<any[]> | undefined} An array containing the newly inserted record(s) upon successful insertion. 
  * If an error occurs during the database operation, it logs the error to the console and returns `undefined`.
  */
-export async function createOrder(chat_id: number, total: number, subtotal: number, products: number[]) {
-    const { data, error } = await supabase.from('orders')
+export async function createOrder(
+    chat_id: UUID,
+    total: number,
+    subtotal: number,
+    products: number[]
+): Promise<any> {
+    const { data, error } = await supabase
+        .from('orders')
         .insert([
             {
                 chat_id: chat_id,
@@ -162,7 +186,7 @@ export async function createOrder(chat_id: number, total: number, subtotal: numb
         ])
         .select()
 
-    if (error) console.error(error)
+    if (error) console.error('createOrder', error)
     if (data) {
         console.log("createOrder", data)
         console.log("createOrder products", products)
@@ -178,23 +202,24 @@ export async function createProductOrder(products: number[], orderId: number) {
         quantity: 0
     }))
 
-    const { data, error } = await supabase.from('product_order')
+    const { data, error } = await supabase
+        .from('product_order')
         .insert(inserts)
         .select()
 
-    if (error) console.error(error)
+    if (error) console.error('createProductOrder', error)
     return data
 }
 
-export async function getChatId(businessId: number, customerPhone: string) {
+export async function getChatId(businessId: number, customerPhoneId: number | null) {
     const { data, error } = await supabase
         .from("chats")
         .select("id")
         .eq("business_id", businessId)
-        .ilike("customer_phone", `%${customerPhone}%`)
+        .eq("customer_phone_id", customerPhoneId)
         .single()
 
-    if (error) console.error(error)
+    if (error) console.error('getChatId', error)
 
     return data?.id
 }
@@ -205,7 +230,7 @@ export async function getChats() {
         .select("*")
         .limit(10)
 
-    if (error) console.error(error)
+    if (error) console.error('getChats', error)
 
     return data
 }
