@@ -1,7 +1,7 @@
 import qrcode from "qrcode-terminal"
 import Dify from "./lib/dify.js"; "./lib/dify.js";
 import { Client, LocalAuth } from "whatsapp-web.js";
-import { getChatByClientAndBusinessPhone, saveChatToDB } from "./lib/db.js"
+import { saveChatToDB, getChatByClientAndBusinessPhone } from "enwhats-db";
 import removeAccents from "./lib/remove-accents.js";
 import type { CustomerBusinessNumbers } from "./dto/dify-data-completion.js";
 

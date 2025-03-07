@@ -1,6 +1,7 @@
 import express, { type Express, type Request, type Response } from "express";
-import { createOrder, getBusinessIdByPhoneNumber, getChatId, getChats, getPhoneIdByNumber, getProduct, getProducts } from "./lib/db";
+import { createOrder, getChatId, getChats, getPhoneIdByNumber, getProduct, getProducts } from "enwhats-db"
 import Dify from "./lib/dify";
+import { getBusinessIdByPhoneNumber } from "enwhats-db/src/business";
 
 const app: Express = express();
 app.use(express.json())
@@ -82,4 +83,4 @@ app.get('/chats/delete/:conversation_id/:user_id', async (req: Request, res: Res
     res.send(result)
 })
 
-export default app
+export default app 
