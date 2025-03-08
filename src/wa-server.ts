@@ -43,24 +43,26 @@ whatsapp.on('qr', (qr) => {
 // Things to consider:
 //  1. A single user can have conversations with multiple business.
 //  2. Dify stores messages, and the database stores our app's data
-//  3. We have to sync Dify conversatinos with database chats
+//  3. Dify is what generates conversation IDs
+//  4. We have to sync Dify conversatinos with database chats
 whatsapp.on('message', async (msg) => {
     let businessPhone = msg.to
     let customerPhone = msg.from
 
     // 1. Find if user has any previous conversation in dify
-    let customerHasConversations = await dify.userHasConversations(customerPhone)
+    let customerHasDifyConversations = await dify.userHasConversations(customerPhone)
 
     // 2. If there are any conversations of this user in dify, check if there is a 
     //    chat/conversation between current user and current business in database
-    let previousConversation;
-    if (customerHasConversations) {
-        previousConversation = await getChatByClientAndBusinessPhone(
+    let previousSupabaseConversation;
+    if (customerHasDifyConversations) {
+        previousSupabaseConversation = await getChatByClientAndBusinessPhone(
             supabase,
             customerPhone,
             businessPhone
         )
     }
+
     // 3. Send message to to previous conversation (or create a new one)
     let text = removeAccents(msg.body)
     let phones: CustomerBusinessNumbers = {
@@ -70,12 +72,13 @@ whatsapp.on('message', async (msg) => {
     let difyResponse = await dify.sendMessage(
         text,
         customerPhone,
-        previousConversation ? previousConversation.id : undefined, // if previousConversation exists, it's pass it's id, if not, dify creates a new one and returns its id
+        previousSupabaseConversation ? previousSupabaseConversation.id : undefined, // if previousConversation exists, it's pass it's id, if not, dify creates a new one and returns its id
         phones
     )
 
-    // 4. Save created conversatinos, if it didnt exist
-    if (!customerHasConversations) {
+    // 4. Save created conversation, if it didnt exist
+    if (!previousSupabaseConversation) {
+        console.log('saving new conversation to supabse')
         saveChatToDB(
             supabase,
             businessProfile.id,
