@@ -4,9 +4,12 @@ import { Client, LocalAuth } from "whatsapp-web.js";
 import { saveChatToDB, getChatByClientAndBusinessPhone } from "enwhats-db";
 import removeAccents from "./lib/remove-accents.js";
 import type { CustomerBusinessNumbers } from "./dto/dify-data-completion.js";
+import { createClient } from "@supabase/supabase-js";
 
 const difyApiKey = process.env['DIFY_API_KEY'] || ''
 const difyURL = process.env['DIFY_URL'] || ''
+const supabaseURL = process.env['SUPABASE_URL'] || ''
+const supabaseKey = process.env['SUPABASE_ADMIN_KEY'] || ''
 
 let businessProfile = {
     id: 1,
@@ -15,6 +18,7 @@ let businessProfile = {
     email: "chatally@gmail.com"
 }
 
+const supabase = createClient(supabaseURL, supabaseKey)
 let dify = new Dify(difyURL, difyApiKey)
 
 // Create a new client instance
@@ -50,8 +54,13 @@ whatsapp.on('message', async (msg) => {
     // 2. If there are any conversations of this user in dify, check if there is a 
     //    chat/conversation between current user and current business in database
     let previousConversation;
-    if (customerHasConversations) previousConversation = await getChatByClientAndBusinessPhone(customerPhone, businessPhone)
-
+    if (customerHasConversations) {
+        previousConversation = await getChatByClientAndBusinessPhone(
+            supabase,
+            customerPhone,
+            businessPhone
+        )
+    }
     // 3. Send message to to previous conversation (or create a new one)
     let text = removeAccents(msg.body)
     let phones: CustomerBusinessNumbers = {
@@ -66,7 +75,14 @@ whatsapp.on('message', async (msg) => {
     )
 
     // 4. Save created conversatinos, if it didnt exist
-    if (!customerHasConversations) saveChatToDB(businessProfile.id, customerPhone, difyResponse.conversation_id)
+    if (!customerHasConversations) {
+        saveChatToDB(
+            supabase,
+            businessProfile.id,
+            customerPhone,
+            difyResponse.conversation_id
+        )
+    }
 
     msg.reply(difyResponse.answer)
 })
