@@ -1,6 +1,6 @@
 import express, { type Express, type Request, type Response } from "express";
 import { createOrder, getChatId, getChats, getPhoneIdByNumber, getProduct, getProducts } from "enwhats-db"
-import Dify from "./lib/dify";
+import Dify from "dify-js"
 import { getBusinessIdByPhoneNumber } from "enwhats-db/src/business";
 
 const app: Express = express();
