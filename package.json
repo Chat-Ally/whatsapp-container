@@ -27,7 +27,7 @@
     "@types/qrcode-terminal": "^0.12.2",
     "typescript": "^5.8.2"
   },
-  "patchedDependencies": {
-    "fluent-ffmpeg@2.1.2": "patches/fluent-ffmpeg@2.1.2.patch"
+  "overrides": {
+    "fluent-ffmpeg": "2.1.3"
   }
 }
