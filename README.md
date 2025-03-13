@@ -30,3 +30,7 @@ Replace `"fluent-ffmpeg": "2.1.2", ` with `"fluent-ffmpeg": "2.1.3",`
 And finally, npm install.
 
 Remove package-lock.json or node_modules if necessary.
+
+## Run container
+
+docker run -it --rm whatsapp-container:latest 
