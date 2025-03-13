@@ -1,33 +1,14 @@
-# Use the official Ubuntu base image
-FROM ubuntu:latest
+FROM oven/bun:debian
 
-# Set non-interactive mode for apt-get
-ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install gnupg wget git -y && \
+    wget -q -O- https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor > /etc/apt/trusted.gpg.d/google-archive.gpg && \
+    sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' && \
+    apt-get update && \
+    apt-get install google-chrome-stable -y --no-install-recommends && \
+    rm -rf /var/lib/apt/lists/*
 
-# Install dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates gnupg && 
-
-# Download and install nvm:
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-
-# in lieu of restarting the shell
-RUN \. "$HOME/.nvm/nvm.sh"
-
-# Download and install Node.js:
-RUN nvm install 23
-
-# Verify the Node.js version:
-RUN node -v # Should print "v23.9.0".
-RUN nvm current # Should print "v23.9.0".
-
-# Verify npm version:
-RUN npm -v # Should print "10.9.2".
-
-# Set the working directory inside the container
 WORKDIR /app
 
-# Copy your JavaScript file into the container. Assume your file is named app.js
-COPY dist/ .
+COPY . .
 
-# Run the application
 CMD ["node", "index.js"]
