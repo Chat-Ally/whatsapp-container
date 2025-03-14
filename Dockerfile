@@ -7,8 +7,12 @@ RUN apt-get update && apt-get install gnupg wget git -y && \
     apt-get install google-chrome-stable -y --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
+WORKDIR /
 
-COPY . .
+RUN git clone https://github.com/Chat-Ally/whatsapp-container.git
+
+WORKDIR /whatsapp-container
+
+RUN bun install
 
 CMD ["bun", "run",  "src/index.js"]
