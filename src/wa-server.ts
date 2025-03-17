@@ -10,13 +10,17 @@ const difyApiKey = process.env['DIFY_API_KEY'] || ''
 const difyURL = process.env['DIFY_URL'] || ''
 const supabaseURL = process.env['SUPABASE_URL'] || ''
 const supabaseKey = process.env['SUPABASE_ADMIN_KEY'] || ''
+const businessId = process.env['BUSINESS_ID'] || ''
 
-let businessProfile = {
+if (!difyApiKey || !difyURL || !supabaseURL || !supabaseKey || !businessId) {
+    throw new Error("Environmen variable missing")
+}
+/* let businessProfile = {
     id: 1,
     name: "Chat Ally",
     phone: "5219995992592@c.us",
     email: "chatally@gmail.com"
-}
+} */
 
 const supabase = createClient(supabaseURL, supabaseKey)
 let dify = new Dify(difyURL, difyApiKey)
@@ -35,7 +39,19 @@ whatsapp.once('ready', () => {
 });
 
 // When the client received QR-Code
-whatsapp.on('qr', (qr) => {
+whatsapp.on('qr', async (qr) => {
+    let { data, error } = await supabase.from("whatsapp-containers")
+        .upsert([{
+            id: businessId,
+            qr: qr
+        }],
+            {
+                count: "estimated",
+            }
+        )
+
+    if (error) console.error(error)
+    if (data) console.log('data: ', data)
     qrcode.generate(qr, { small: true });
 });
 
@@ -81,7 +97,7 @@ whatsapp.on('message', async (msg) => {
         console.log('saving new conversation to supabse')
         saveChatToDB(
             supabase,
-            businessProfile.id,
+            Number(businessId),
             customerPhone,
             difyResponse.conversation_id
         )
