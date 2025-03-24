@@ -42,7 +42,7 @@ whatsapp.once('ready', () => {
 whatsapp.on('qr', async (qr) => {
     let { data, error } = await supabase.from("whatsapp-containers")
         .upsert([{
-            id: businessId,
+            business_id: businessId,
             qr: qr
         }],
             {
