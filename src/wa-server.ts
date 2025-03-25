@@ -55,6 +55,17 @@ whatsapp.on('qr', async (qr) => {
     qrcode.generate(qr, { small: true });
 });
 
+whatsapp.on('authenticated', async () => {
+    let { data, error } = await supabase
+        .from("whatsapp-containers")
+        .update({
+            status: "authenticated"
+        })
+        .eq("business_id", businessId)
+
+    if (error) console.error(error)
+})
+
 // Here are a ton of ramifications.
 // Things to consider:
 //  1. A single user can have conversations with multiple business.
